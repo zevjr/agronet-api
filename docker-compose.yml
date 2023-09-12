@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: maistodos-application
+    build:
+      context: .
+      dockerfile: ./docker/app.dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - ./app:/app
+    environment:
+      - DATABASE_URL=sqlite:///db.db

@@ -1,0 +1,64 @@
+[tool.poetry]
+name = "agronet-api"
+version = "0.1.0"
+description = "A REST api to meet the demands of AgroBrasil Seguros"
+authors = ["zevjr (zevjrr@gmail.com)"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-dotenv = "^1.0.0"
+uvicorn = {extras = ["standard"], version = "^0.23.2"}
+fastapi = "^0.103.0"
+httpx = "^0.24.1"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+pydantic-settings = "^2.0.3"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.5.1"
+black = "^23.7.0"
+isort = "^5.12.0"
+flake8 = "^6.1.0"
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+autopep8 = "^2.0.4"
+autoflake = "^2.2.0"
+ipython = "^8.14.0"
+ipdb = "^0.13.13"
+taskipy = "^1.12.0"
+locust = "^2.16.1"
+faker = "^19.3.1"
+
+
+[tool.poetry.group.doc.dependencies]
+mkdocs-material = "^9.2.5"
+mkdocstrings = "^0.22.0"
+mkdocstrings-python = "^1.6.0"
+mkdocs-macros-plugin = "^1.0.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+line_length = 100
+
+[tool.pytest.ini_options]
+pythonpath = "."
+addopts = "--ignore=tests/performance --doctest-modules"
+
+[tool.taskipy.tasks]
+lint = "black --check --diff . && isort --check --diff . && flake8 -v"
+format = "black . &&  isort ."
+pre_test = "task lint"
+test =  "pytest -s -x -vv --cov=app --cov-report=term-missing tests"
+post_test = "coverage html"
+docs = "mkdocs serve"
+start = "uvicorn asgi:application --reload --host 0.0.0.0 --port 8001"
+part = "pytest -s -x -vv -k $1"
+locust = "locust --config locust.conf"

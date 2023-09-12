@@ -1,0 +1,39 @@
+site_name: 'AgroNet Api'
+repo_url: 'https://github.com/zevjr/agronet-api'
+repo_name: 'zevjr/agronet-api'
+
+theme:
+  name: material
+  language: pt-BR
+  features:
+  - navigation.footer
+  - content.code.copy
+
+markdown_extensions:
+  - attr_list
+  - admonition
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+plugins:
+- macros
+- mkdocstrings:
+    handlers:
+      python:
+        paths: [app]
+
+watch:
+  - app
