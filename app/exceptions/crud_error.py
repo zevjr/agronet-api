@@ -3,14 +3,29 @@
 Módulo que define exceções personalizadas para erros de operações CRUD.
 """
 
+from abc import abstractmethod
 import logging
 
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 logger = logging.getLogger(__name__)
 
 
-class CRUDUpdateError(HTTPException):
+class CRUDBaseError(HTTPException):
+    username: str
+
+    def __init__(self, status=status.HTTP_404_NOT_FOUND) -> None:
+        super().__init__(
+            status,
+            self.erro_message(),
+            headers={"X-Username-Error": self.username},
+        )
+
+    @abstractmethod
+    def erro_message(self):
+        ...
+
+class CRUDUpdateError(CRUDBaseError):
     """
     Exceção personalizada para erros de atualização em operações CRUD.
 
@@ -27,15 +42,16 @@ class CRUDUpdateError(HTTPException):
         >>> raise CRUDUpdateError(username="john_doe", obj_id=123)
     """
 
-    def __init__(self, username, *, obj_id) -> None:
-        super().__init__(
-            404,
-            f"Not updated, reference object not found, ReferenceObject<{obj_id}>",
-            headers={"X-Username-Error": username},
-        )
+    def __init__(self, *, obj_id, err=None) -> None:
+        self.obj_id = obj_id
+        super().__init__()
+        logger.error(f"Error updating object {obj_id} from {err}")
+
+    def erro_message(self):
+        return f"Not updated, reference object not found, ReferenceObject<{self.obj_id}>"
 
 
-class CRUDDeleteError(HTTPException):
+class CRUDDeleteError(CRUDBaseError):
     """
     Exceção personalizada para erros de exclusão em operações CRUD.
 
@@ -52,15 +68,16 @@ class CRUDDeleteError(HTTPException):
         >>> raise CRUDDeleteError(username="john_doe", obj_id=123)
     """
 
-    def __init__(self, username, *, obj_id) -> None:
-        super().__init__(
-            404,
-            f"Not deleted, reference object not found, ReferenceObject<{obj_id}>",
-            headers={"X-Username-Error": username},
-        )
+    def __init__(self, *, obj_id, err=None) -> None:
+        self.obj_id = obj_id
+        super().__init__()
+        logger.error(f"Error delete object {obj_id} from {err}")
+
+    def erro_message(self):
+        return f"Not deleted, reference object not found, ReferenceObject<{self.obj_id}>"
 
 
-class CRUDSelectError(HTTPException):
+class CRUDSelectError(CRUDBaseError):
     """
     Exceção personalizada para erros de seleção em operações CRUD.
 
@@ -77,15 +94,16 @@ class CRUDSelectError(HTTPException):
         >>> raise CRUDSelectError(username="john_doe", obj_id=123)
     """
 
-    def __init__(self, username, *, obj_id) -> None:
-        super().__init__(
-            404,
-            f"Item not found, ReferenceObject<{obj_id}>",
-            headers={"X-Username-Error": username},
-        )
+    def __init__(self, *, obj_id, err=None) -> None:
+        super().__init__()
+        self.obj_id = obj_id
+        logger.error(f"Error find object {obj_id} from {err}")
+
+    def erro_message(self):
+        return f"Not selected, reference object not found, ReferenceObject<{self.obj_id}>"
 
 
-class CRUDCreateError(HTTPException):
+class CRUDCreateError(CRUDBaseError):
     """
     Exceção personalizada para erros de criação em operações CRUD.
 
@@ -102,9 +120,9 @@ class CRUDCreateError(HTTPException):
         >>> raise CRUDCreateError(username="john_doe", obj_error="Número de cartão já existe")
     """
 
-    def __init__(self, username, *, obj_error) -> None:
-        super().__init__(
-            409,
-            f"Conflict, this card number already exists, Error={obj_error}",
-            headers={"X-Username-Error": username},
-        )
+    def __init__(self, *, err=None) -> None:
+        super().__init__(status.HTTP_409_CONFLICT)
+        logger.error(f"Error create object from {err}")
+
+    def erro_message(self):
+        return f"Conflict, this card number already exists"

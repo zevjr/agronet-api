@@ -19,6 +19,7 @@ Attributes:
 import logging
 import os
 from functools import lru_cache
+from typing import Any
 
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
@@ -29,23 +30,41 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
+def getenv(env: str, default: Any = "") -> str:
+
+    return os.getenv(env, default)
+
+
 class APISettings(BaseSettings):
     """
     As variaveis de ambiente são definidas no arquivo .env na raiz do projeto.
 
     """
 
-    environment: str = os.environ.get("ENVIRONMENT", "dev")
+    environment: str = getenv("ENVIRONMENT", "dev")
     service_name: str = "AgroNet Api"
-    log_level: str = os.environ.get("LOG_LEVEL", "INFO")
-    is_sqlite: bool = bool(os.environ.get("IS_SQLITE", True))
+    log_level: str = getenv("LOG_LEVEL", "INFO")
+    is_sqlite: bool = bool(getenv("IS_SQLITE", True))
 
-    database_url: str = (
-        "sqlite:///db.db" if is_sqlite else os.environ.get("DATABASE_URL", "")
-    )
-    secret_key: str = os.environ.get("SECRET_KEY", "secret")
-    algorithm: str = os.environ.get("ALGORITHM", "HS256")
-    token_expire: int = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+    secret_key: str = getenv("SECRET_KEY", "secret")
+    algorithm: str = getenv("ALGORITHM", "HS256")
+    token_expire: int = int(getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+
+    # database settings
+    postgres_driver: str = "asyncpg"
+    postgres_user: str = getenv("POSTGRES_USER")
+    postgres_password: str = getenv("POSTGRES_PASSWORD")
+    postgres_server: str = getenv("POSTGRES_SERVER")
+    postgres_port: int = int(getenv("POSTGRES_PORT", 5432))
+    postgres_db: str = getenv("POSTGRES_DB")
+
+    @property
+    def database_url(self) -> str:
+        """Create a valid Postgres database url."""
+        return f"postgresql+{self.postgres_driver}://"\
+        f"{self.postgres_user}:{self.postgres_password}@"\
+        f"{self.postgres_server}:{self.postgres_port}/{self.postgres_db}"
+
 
     class Config:
         validate_assignment = True
@@ -62,6 +81,3 @@ def get_api_settings() -> APISettings:
     using the `lru_cache` instance method `get_api_settings.cache_clear()`.
     """
     return APISettings()
-
-
-settings = get_api_settings()

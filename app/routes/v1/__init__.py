@@ -12,8 +12,8 @@ Args:
 import logging
 
 from fastapi import APIRouter
+from .views import router_health
 
-from app.views import router_health
 
 logger = logging.getLogger(__name__)
 

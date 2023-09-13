@@ -15,7 +15,8 @@ import logging.config
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from app.config import settings
+from app.config import get_api_settings 
+from app.db.db_session import initialize_database
 from app.routes import api_router_v1
 
 logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
@@ -29,7 +30,7 @@ def create_app() -> FastAPI:
 
     """
     app = FastAPI(
-        title=settings.service_name, docs_url="/api/docs", redoc_url="/api/redoc"
+        title=get_api_settings().service_name, docs_url="/api/docs", redoc_url="/api/redoc"
     )
 
     app.add_middleware(
@@ -42,6 +43,8 @@ def create_app() -> FastAPI:
 
     app.include_router(api_router_v1, prefix="/api")
 
-    logger.info(f"starting app {settings.service_name}")
+    app.on_event("startup")(initialize_database)
+
+    logger.info(f"starting app {get_api_settings().service_name}")
 
     return app
